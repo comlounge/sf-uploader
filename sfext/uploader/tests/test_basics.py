@@ -27,7 +27,7 @@ def test_remove(simple_app, testimage):
     asset = simple_app.module_map.uploader.add(fp, filename="testimage")
 
     simple_app.module_map.uploader.remove(asset._id)
-    pytestt.raises(AssetNotFound, simple_app.module_map.uploader.get, asset._id)
+    pytest.raises(AssetNotFound, simple_app.module_map.uploader.get, asset._id)
 
 
 
