@@ -41,11 +41,13 @@ class Uploader(Module):
 
     name = "uploader"
 
-    default_config = {
+    defaults = {
         'use_uuid'          : True,
         'metadata_db'       : None,
         'store'             : FilesystemStore(),
         'processors'        : {},
+        'static_folder'     : 'static/',
+        'static_url_path'   : '/static',
     }
 
     def add(self, 
