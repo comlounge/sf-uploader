@@ -3,6 +3,8 @@ import uuid
 import copy
 
 from stores import FilesystemStore
+from db import Asset, Assets
+from mongogogo import ObjectNotFound
 
 __all__ = ['Uploader', 'upload_module', 'AssetNotFound']
 
@@ -16,16 +18,17 @@ class AssetNotFound(Exception):
     def __repr__(self):
         return """<< AssetNotFound: %s >>""" %self.asset_id
 
-class Asset(AttributeMapper):
+class NoAsset(AttributeMapper):
     """an asset object with access to the file pointer"""
 
     def __init__(self, default = {}, store = None, *args, **kwargs):
         super(Asset, self).__init__(default = default, *args, **kwargs)
         self._store = store
-    
+
     def get_fp(self):
         """return the filepointer"""
         return self._store.get(self._id)
+    
 
 
 class Uploader(Module):
@@ -59,10 +62,14 @@ class Uploader(Module):
         content_type = "application/octet-stream",
         store_kw = {},
         metadata = {},
+        asset_id = None,
         **kw):
         """add a file to the media database
 
         :param fp: The file pointer of the file to add, should be seeked to 0
+        :param filename: The filename to be used for the public. Does not need to correspond to the internal one.
+        :param asset_id: The id (string) of the asset to be used in the asset database. This is the "internal" filename.
+            In case you don't give one, a UUID will be generated.  
         :param content_length: The size of the file to add (optional, will be computed otherwise)
         :param content_type: The media type of the file to add (optional)
         :param store_kw: optional parameters to be passed to the store
@@ -73,64 +80,68 @@ class Uploader(Module):
         if filename is None:
             filename = unicode(uuid.uuid4())
 
-        # we differ between the incoming filename and the internal one for the store.
-        if self.config.use_uuid:
-            asset_filename = unicode(uuid.uuid4())
-        else:
-            asset_filename = filename
+        if asset_id is None:
+            asset_id = unicode(uuid.uuid4())
 
         # store filepointer via store. we will get some store related data back. 
         # at least filename and content length 
-        asset_md = self.config.store.add(fp, filename=asset_filename)
+        asset_md = self.config.store.add(fp, asset_id=asset_id, filename = filename)
 
         metadata.update(kw)
 
         asset = Asset(
-            store = self.config.store,
-            _id = asset_md.filename,
-            store_metadata = asset_md,
+            _id = asset_id,
+            filename = filename,
             content_type = content_type, 
             content_length = asset_md.content_length,
+            store_metadata = asset_md,
             metadata = metadata,
         )
+        asset.store = self.config.store
+        if self.config.assets is not None:
+            asset = self.config.assets.save(asset)
         return asset
     
     def get(self, asset_id, md = {}, **kw):
-        """return a file based on the asset id. We will return an asset object in this case
-        which is basically the metadata but also has access to the filepointer
+        """retrieves a file from the store.
 
-        If you use some metadata database in this module you only need to pass in the asset id.
-        In case you store metadata yourself in your app you might want to pass it in here if
-        you want to have it accessble inside the ``Asset`` instance. 
-
-        :param asset_id: The asset id you want to retrieve from the store
+        In case you use the asset database you can simply give the asset id. Alternatively you
+        can use the filename to directly access the underlying store. You need to give one
+        though otherwise None will be returned.
+        
+        :param asset_id: The internal asset id you want to retrieve from the store
         :param metadata: optional metadata in case you have stored it yourself.
         :param **kw: additional metadata 
         :returns: An instance of ``Asset`` which contains all metadata and the filepointer.
         
         """
 
-        md = copy.copy(md)
-        md.update(kw)
-        md['_id'] = asset_id
+        if self.config.assets is not None:
+            try:
+                asset = self.config.assets.get(asset_id)
+            except ObjectNotFound:
+                raise AssetNotFound(asset_id)
+            filename = asset.filename
+        else: 
+            md = copy.copy(md)
+            md.update(kw)
+            asset = Asset(_id = asset_id, **md)
+
+        asset.store = self.config.store
+
         if not self.config.store.exists(asset_id):
             raise AssetNotFound(asset_id)
-        if self.config.metadata_db is None:
-            return Asset(store = self.config.store, **md)
-        else:
-            asset = self.config.metadata_db.get(asset_id)
-            asset._store = self.config.store
-            return asset
+        return asset
 
     def remove(self, asset_id):
         """remove an asset from the system
 
         :param asset_id: the asset id of the asset to remove
         """
-        if self.config.metadata_db is None:
+        if self.config.assets is None:
             self.config.store.remove(asset_id)
         else:
-            self.config.metadata_db.remove(asset_id)
+            self.config.assets.remove(asset_id)
             self.config.store.remove(asset_id)
 
 upload_module = Uploader(__name__)
