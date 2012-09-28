@@ -30,6 +30,9 @@ def test_remove(db_app, testimage):
     db_app.module_map.uploader.remove(asset._id)
     pytest.raises(AssetNotFound, db_app.module_map.uploader.get, asset._id)
 
-
-
-
+def test_metadata(db_app, testimage):
+    """retrieve the image again"""
+    fp = testimage.open()
+    asset = db_app.module_map.uploader.add(fp, filename="testimage", foo="bar")
+    asset = db_app.module_map.uploader.get(asset._id)
+    assert asset.metadata.foo == "bar"

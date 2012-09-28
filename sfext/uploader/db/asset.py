@@ -6,7 +6,7 @@ class AssetSchema(Schema):
     content_type = String(default=u"application/octet-stream")
     content_length = Integer(default=0)
     store_metadata = Dict(default={})
-    metadata = Dict(default={})
+    metadata = Dict(default={}, dotted=True)
     filename = String(default=u"")
 
 class Asset(Record):
