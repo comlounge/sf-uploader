@@ -45,6 +45,8 @@ class Uploader(Module):
         'use_uuid'          : True,
         'metadata_db'       : None,
         'store'             : FilesystemStore(),
+        'asset'             : Asset,
+        'assets'            : None, # if None nothing will be stored but only returned
         'processors'        : {},
         'static_folder'     : 'static/',
         'static_url_path'   : '/static',
