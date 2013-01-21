@@ -1,7 +1,7 @@
 import pymongo                                                                                                                                                                       
 import datetime
 from starflyer import Module, Application
-from sfext.uploader import upload_module, Assets
+from sfext.uploader import upload_module, Assets, processors
 import py.path
 
 DB_NAME = "sfext_testing_cs87cs68cs76cs87cs6d86"
@@ -51,7 +51,7 @@ def pytest_funcarg__db_app(request):
     return MyApp(__name__)
 
 def pytest_funcarg__conv_app(request):
-    """create the simplest app with uploader support and some converters"""
+    """create the simplest app with uploader support and some processors"""
     db = request.getfuncargvalue("db")
     assets = Assets(db.assets)
 
@@ -61,14 +61,14 @@ def pytest_funcarg__conv_app(request):
         
         modules = [
             upload_module(
-#                converters = [
-#                    ImageSizeConverter({
-#                        'thumb' : "100x100!", 
-#                        'small' : "200x",
-#                        'medium' : "500x",
-#                        'large' : "1200x",
-#                    })
-#                ],
+                processors = [
+                    processors.ImageSizeProcessor({
+                        'thumb' : "100x100!", 
+                        'small' : "100x",
+                        'medium' : "500x",
+                        'large' : "1200x",
+                    })
+                ],
                 assets = assets
             ),
         ]
@@ -79,4 +79,8 @@ def pytest_funcarg__conv_app(request):
 def pytest_funcarg__testimage(request):
     p = py.path.local(request.fspath)
     return p.dirpath().join("assets/logo.png")
+
+def pytest_funcarg__bigimage(request):
+    p = py.path.local(request.fspath)
+    return p.dirpath().join("assets/big.png")
 

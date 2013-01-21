@@ -15,6 +15,7 @@ class AssetSchema(colander.MappingSchema):
     content_length = colander.SchemaNode(colander.Integer())
     content_type = colander.SchemaNode(colander.String())
     metadata = colander.SchemaNode(onrm.AnyData(), missing={})
+    parent = colander.SchemaNode(onrm.String(), missing = None)
 
 class Asset(onrm.Record):
     """an asset to be stored in the media database"""

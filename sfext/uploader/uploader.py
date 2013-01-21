@@ -53,6 +53,7 @@ class Uploader(Module):
         'processors'        : {},
         'static_folder'     : 'static/',
         'static_url_path'   : '/static',
+        'processors'        : [],   # list of processors to run for each incoming asset
     }
 
     def add(self, 
@@ -63,6 +64,9 @@ class Uploader(Module):
         store_kw = {},
         metadata = {},
         asset_id = None,
+        parent = None,
+        variant_name = None,
+        run_processors = True,
         **kw):
         """add a file to the media database
 
@@ -73,6 +77,13 @@ class Uploader(Module):
         :param content_length: The size of the file to add (optional, will be computed otherwise)
         :param content_type: The media type of the file to add (optional)
         :param store_kw: optional parameters to be passed to the store
+        :param parent: if this is an asset derived from an existing asset, this one should be passed in here
+                as parent. This is mostly used by processors to define variants.
+        :param variant_name: an optional name of the variant if this asset is derived from another asset.
+                This can e.g. be "thumb" if this is the thumbnail version of an existing image.
+                Mostly used in combination with ``parent``
+        :param run_processors: flag to define whether processors should run or not. As we use the same method
+                from within processors these will pass in False to prevent infinite loops.
         :param **kw: additional parameters stored alongside the file
         :return: A dictionary containing the final filename, content length and type
         """
@@ -85,7 +96,7 @@ class Uploader(Module):
 
         # store filepointer via store. we will get some store related data back. 
         # at least filename and content length 
-        asset_md = self.config.store.add(fp, asset_id=asset_id, filename = filename)
+        asset_md = self.config.store.add(fp, asset_id = asset_id, filename = filename)
 
         metadata.update(kw)
 
@@ -95,11 +106,20 @@ class Uploader(Module):
             content_type = content_type, 
             content_length = asset_md.content_length,
             store_metadata = asset_md,
+            variant_name = variant_name,
             metadata = metadata,
         )
         asset.store = self.config.store
+        asset.uploader = self
         if self.config.assets is not None:
+            if parent is not None:
+                asset.parent = parent._id
             asset = self.config.assets.save(asset)
+
+        # now run any processors defined for this module
+        if run_processors:
+            for p in self.config.processors:
+                p.process(asset, self)
         return asset
     
     def get(self, asset_id, md = {}, **kw):
@@ -128,6 +148,7 @@ class Uploader(Module):
             asset = Asset(_id = asset_id, **md)
 
         asset.store = self.config.store
+        asset.uploader = self
 
         if not self.config.store.exists(asset_id):
             raise AssetNotFound(asset_id)

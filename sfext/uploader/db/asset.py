@@ -9,15 +9,30 @@ class AssetSchema(Schema):
     metadata = Dict(default={}, dotted=True)
     filename = String(default=u"")
 
+    # variant linking
+    parent = String(default=None)
+    variant_name = String(default=None)
+
 class Asset(Record):
     schema = AssetSchema()
     schemaless = True
     store = None
-    _protected = Record._protected+['store']
+    uploader = None
+    _protected = Record._protected+['store', 'uploader']
 
     def get_fp(self):
         """return the filepointer"""
         return self.store.get(self._id)
+
+    @property
+    def variants(self):
+        coll =  self._collection
+        variants = {}
+        for v in coll.find({'parent' : self._id}):
+            if v.variant_name is not None:
+                variants[v.variant_name] = self.uploader.get(v._id)
+        return variants
+        
 
 class Assets(Collection):
 
