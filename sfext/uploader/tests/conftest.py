@@ -50,6 +50,31 @@ def pytest_funcarg__db_app(request):
 
     return MyApp(__name__)
 
+def pytest_funcarg__conv_app(request):
+    """create the simplest app with uploader support and some converters"""
+    db = request.getfuncargvalue("db")
+    assets = Assets(db.assets)
+
+    class MyApp(Application):
+        """test app with uploader"""
+
+        
+        modules = [
+            upload_module(
+#                converters = [
+#                    ImageSizeConverter({
+#                        'thumb' : "100x100!", 
+#                        'small' : "200x",
+#                        'medium' : "500x",
+#                        'large' : "1200x",
+#                    })
+#                ],
+                assets = assets
+            ),
+        ]
+
+    return MyApp(__name__)
+
 
 def pytest_funcarg__testimage(request):
     p = py.path.local(request.fspath)

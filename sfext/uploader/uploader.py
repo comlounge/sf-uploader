@@ -141,7 +141,7 @@ class Uploader(Module):
         if self.config.assets is None:
             self.config.store.remove(asset_id)
         else:
-            self.config.assets.remove(asset_id)
+            self.config.assets._remove(asset_id)
             self.config.store.remove(asset_id)
 
 upload_module = Uploader(__name__)
