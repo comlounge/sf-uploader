@@ -28,7 +28,7 @@ class NoAsset(AttributeMapper):
     def get_fp(self):
         """return the filepointer"""
         return self._store.get(self._id)
-    
+
 
 
 class Uploader(Module):
@@ -56,7 +56,7 @@ class Uploader(Module):
         'processors'        : [],   # list of processors to run for each incoming asset
     }
 
-    def add(self, 
+    def add(self,
         fp,
         filename = None,
         content_length = None,
@@ -73,7 +73,7 @@ class Uploader(Module):
         :param fp: The file pointer of the file to add, should be seeked to 0
         :param filename: The filename to be used for the public. Does not need to correspond to the internal one.
         :param asset_id: The id (string) of the asset to be used in the asset database. This is the "internal" filename.
-            In case you don't give one, a UUID will be generated.  
+            In case you don't give one, a UUID will be generated.
         :param content_length: The size of the file to add (optional, will be computed otherwise)
         :param content_type: The media type of the file to add (optional)
         :param store_kw: optional parameters to be passed to the store
@@ -94,8 +94,8 @@ class Uploader(Module):
         if asset_id is None:
             asset_id = unicode(uuid.uuid4())
 
-        # store filepointer via store. we will get some store related data back. 
-        # at least filename and content length 
+        # store filepointer via store. we will get some store related data back.
+        # at least filename and content length
         asset_md = self.config.store.add(fp, asset_id = asset_id, filename = filename)
 
         metadata.update(kw)
@@ -103,7 +103,7 @@ class Uploader(Module):
         asset = Asset(
             _id = asset_id,
             filename = filename,
-            content_type = content_type, 
+            content_type = content_type,
             content_length = asset_md.content_length,
             store_metadata = asset_md,
             variant_name = variant_name,
@@ -121,19 +121,19 @@ class Uploader(Module):
             for p in self.config.processors:
                 p.process(asset, self)
         return asset
-    
+
     def get(self, asset_id, md = {}, **kw):
         """retrieves a file from the store.
 
         In case you use the asset database you can simply give the asset id. Alternatively you
         can use the filename to directly access the underlying store. You need to give one
         though otherwise None will be returned.
-        
+
         :param asset_id: The internal asset id you want to retrieve from the store
         :param metadata: optional metadata in case you have stored it yourself.
-        :param **kw: additional metadata 
+        :param **kw: additional metadata
         :returns: An instance of ``Asset`` which contains all metadata and the filepointer.
-        
+
         """
 
         if self.config.assets is not None:
@@ -142,7 +142,7 @@ class Uploader(Module):
             except ObjectNotFound:
                 raise AssetNotFound(asset_id)
             filename = asset.filename
-        else: 
+        else:
             md = copy.copy(md)
             md.update(kw)
             asset = Asset(_id = asset_id, **md)
