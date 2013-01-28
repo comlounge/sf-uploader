@@ -25,6 +25,7 @@ setup(
     platforms='any',
     install_requires=[
         'starflyer',
+        'PIL',
     ],
     include_package_data=True,
     classifiers=[
