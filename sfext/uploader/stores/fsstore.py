@@ -56,7 +56,8 @@ class FilesystemStore(object):
     def remove(self, asset_id):
         """remove a file"""
         path = os.path.join(self.base_path, asset_id)
-        os.remove(path) 
+        if os.path.exists(path):
+            os.remove(path) 
 
     def exists(self, asset_id):
         """check if the asset exists"""
