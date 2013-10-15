@@ -1,7 +1,9 @@
 import pymongo                                                                                                                                                                       
 import datetime
+import os
 from starflyer import Module, Application
 from sfext.uploader import upload_module, Assets, processors
+from sfext.uploader.stores import FilesystemStore
 import py.path
 
 DB_NAME = "sfext_testing_cs87cs68cs76cs87cs6d86"
@@ -19,8 +21,6 @@ def pytest_funcarg__db(request):
         setup = setup_db,
         teardown = teardown_db,
         scope = "function")
-
-
 
 def pytest_funcarg__simple_app(request):
     """create the simplest app with uploader support ever"""
@@ -83,4 +83,11 @@ def pytest_funcarg__testimage(request):
 def pytest_funcarg__bigimage(request):
     p = py.path.local(request.fspath)
     return p.dirpath().join("assets/big.png")
+
+def pytest_funcarg__fsstore(request):
+    tdir = py.path.local.mkdtemp()
+    tdir = tdir.join("a/b/c") # add some defined part for testing
+    tdir.ensure(dir=True) # ensure that the directories exists
+    return FilesystemStore(tdir.strpath)
+
 

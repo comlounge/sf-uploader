@@ -16,7 +16,14 @@ class FilesystemStore(object):
         - add path generation e.g. via date and time
         
         """
-        self.base_path = base_path
+        self.base_path = os.path.normpath(base_path)+"/"
+
+    def _get_path(self, sub_path):
+        """append a sub_path onto the base path in a secure way"""
+        path = os.path.normpath(os.path.join(self.base_path, sub_path))
+        if not path.startswith(self.base_path):
+            raise ValueError("path is not in base path %s, sub_path=%s" %(self.base_path, sub_path))
+        return path
 
     def add(self, fp, asset_id = None, **kw):
         """add a new file to the store
@@ -29,8 +36,10 @@ class FilesystemStore(object):
         if asset_id is None:
             asset_id = unicode(uuid.uuid4())
 
-        path = os.path.join(self.base_path, asset_id)
+        path = self._get_path(asset_id)
+        print path
         dirpath = os.path.split(path)[0]
+        print dirpath
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
 
@@ -50,17 +59,17 @@ class FilesystemStore(object):
 
     def get(self, asset_id):
         """return a file based on the asset_id"""
-        path = os.path.join(self.base_path, asset_id)
+        path = self._get_path(asset_id)
         return open(path, "rb")
 
     def remove(self, asset_id):
         """remove a file"""
-        path = os.path.join(self.base_path, asset_id)
+        path = self._get_path(asset_id)
         if os.path.exists(path):
             os.remove(path) 
 
     def exists(self, asset_id):
         """check if the asset exists"""
-        path = os.path.join(self.base_path, asset_id)
+        path = self._get_path(asset_id)
         return os.path.exists(path)
 
