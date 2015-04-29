@@ -37,9 +37,7 @@ class FilesystemStore(object):
             asset_id = unicode(uuid.uuid4())
 
         path = self._get_path(asset_id)
-        print path
         dirpath = os.path.split(path)[0]
-        print dirpath
         if not os.path.exists(dirpath):
             os.makedirs(dirpath)
 

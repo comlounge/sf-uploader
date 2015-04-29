@@ -58,7 +58,7 @@ class ImageSizeProcessor(Processor):
 
     def process(self, asset, uploader):
         """do the scaling"""
-
+        
         fp = asset.get_fp()
         fp.seek(0)
 
