@@ -18,15 +18,13 @@ class ReProcessor(ScriptBase):
         """extend the change path script with necessary arguments"""
 
         self.parser.add_argument('--mongodb_name', required=True, help='name of mongodb database')
-        self.parser.add_argument('--mongodb_host', required=False, default="localhost", help='hostname of mongodb database, defaults to localhost')
-        self.parser.add_argument('--mongodb_port', required=False, default=27017, help='port of mongodb database, defaults to 27017')
+        self.parser.add_argument('--mongodb_url', required=False, default="mongodb://localhost", help='url of mongodb database, defaults to mongodb://localhost')
         self.parser.add_argument('--mongodb_collection', required=False, default="assets", help='the name of the assets collection, defaults to assets')
 
     def __call__(self):
         data = vars(self.args)
-        db = pymongo.Connection(
-            data['mongodb_host'],
-            int(data['mongodb_port']))[data['mongodb_name']]
+        db = pymongo.MongoClient(
+            data['mongodb_url'])[data['mongodb_name']]
         coll = db[data['mongodb_collection']]
         assets = Assets(coll, app=self.app, config=self.app.config)
         uploader = self.app.module_map.uploader
