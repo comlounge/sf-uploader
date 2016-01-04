@@ -10,7 +10,7 @@ from setuptools import setup
 
 setup(
     name='sf-uploader',
-    version='0.1-dev',
+    version='1.0',
     url='',
     license='BSD',
     author='Christian Scholz',
@@ -29,7 +29,6 @@ setup(
     ],
     include_package_data=True,
     classifiers=[
-        'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
